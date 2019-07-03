@@ -16,22 +16,39 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // Comment out if you want main() to use the Elliptic Curve method 
 // instead of the Lambda Twist method:
 //#define TEST_LAMBDA_TWIST
 
 // How many trials should main() execute? 
-#define NUMBER_TRIALS 1000000
+#define NUMBER_TRIALS 1000
 
 // A couple levels of debugging capability:
 //#define DEBUG
 //#define DEBUG2
 #define DEBUG2_CUTOFF 1
 
-// Can restrict methods to reject trials outside a "attack angle range"
+// Can restrict methods to reject trials outside a "attack angle range";
+// Also, these need to be set when doing "same triangle" testing as a way
+// to restrict the rotation that precedes the elevation step
 #define ATTACK_ANGLE_MIN 0
-#define ATTACK_ANGLE_MAX 45
+#define ATTACK_ANGLE_MAX 30
+// To avoid rejecting edge cases, widen a bit when testing for rejection 
+#define ATTACK_ANGLE_WIDENING 1.05
+
+// Starting test triangle angles (for "same triangle" testing)
+#define FIRST_ANGLE 0
+#define SECOND_ANGLE 80
+#define THIRD_ANGLE 220
+
+// Random elevation of triangle limits (for "same triangle" testing)
+#define MIN_LIFT 100
+#define MAX_LIFT 200
+
+// Maximum rotation angle after elevating (for "same triangle" testing)
+#define PERIPHERAL_LIMIT 60
 
 // Use the Newton-Raphson method to find root of cubic polynomial,
 // provided by Persson and Nordberg, instead of my algebraic method? 
@@ -61,11 +78,10 @@
 clock_t start_time, end_time, exec_time;
 double getTime() { return (double)exec_time/CLOCKS_PER_SEC; }
 
-// Lower case versions are now used instead, which can be set dynamically
+// Lower case versions are now used, which can be set dynamically
 int attack_angle_min = ATTACK_ANGLE_MIN;
 int attack_angle_max = ATTACK_ANGLE_MAX;
-void set_attack_angle_min(int degrees) { attack_angle_min = degrees; }
-void set_attack_angle_max(int degrees) { attack_angle_max = degrees; }
+double attack_angle_widening = ATTACK_ANGLE_WIDENING;
 
 // Normalize a vector 
 void normalize(double v[3], double w[3]) {
@@ -167,16 +183,42 @@ void invertMatrix(double m[3][3], double mi[3][3]) {
 
 // Return a random real number in a specified range 
 double randomReal(double a, double b) {
-   return a + (float)rand()/(float)(RAND_MAX/(b-a));
+   return a + (float)rand()/(float)(RAND_MAX) * (b-a);
 }
 
 // Create the matrix for a random rotation
 void randomRotation(double m[3][3]) {
-	double a, b, c, d, theta, phi, psi, pi, w[3];
-  	pi = 4*atan(1); // goofy way to get pi in C 
+	double a, b, c, d, theta, phi, psi, pi = 4*atan(1), w[3];
 	theta = randomReal(-pi, pi);  // longitude 
 	phi = acos(randomReal(-1,1)); // lattitude wrt north pole 
 	psi = randomReal(-pi, pi);    // rotation amount
+	w[0] = sin(phi)*cos(theta); 
+	w[1] = sin(phi)*sin(theta); 
+	w[2] = cos(phi);
+	a = cos(psi/2); 
+	b = w[0]*sin(psi/2); 
+	c = w[1]*sin(psi/2); 
+	d = w[2]*sin(psi/2); 
+	m[0][0] = a*a+b*b-c*c-d*d; 
+	m[0][1] = 2*(b*c-a*d); 
+	m[0][2] = 2*(b*d+a*c); 
+	m[1][0] = 2*(b*c+a*d); 
+	m[1][1] = a*a-b*b+c*c-d*d; 
+	m[1][2] = 2*(c*d-a*b); 
+	m[2][0] = 2*(b*d-a*c); 
+	m[2][1] = 2*(c*d+a*b); 
+	m[2][2] = a*a-b*b-c*c+d*d;	
+}
+
+// Create the matrix for a random rotation with restrictions
+void randomRotationRestricted(double m[3][3], 
+  double thetaMin, double thetaMax, 
+  double zMin, double zMax, 
+  double psiMin, double psiMax) {
+	double a, b, c, d, theta, phi, psi, pi = 4*atan(1), w[3];
+	theta = randomReal(thetaMin, thetaMax); // longitude 
+	phi = acos(randomReal(zMax,zMin)); // lattitude wrt north pole 
+	psi = randomReal(psiMin,psiMax);   // rotation amount
 	w[0] = sin(phi)*cos(theta); 
 	w[1] = sin(phi)*sin(theta); 
 	w[2] = cos(phi);
@@ -200,11 +242,10 @@ void randomRotation(double m[3][3]) {
 int rotateIntoPosition(double u[3], double up[3], double v[3], 
   double vp[3], double m[3][3]) {
   	int extra; 
-  	double a, b, c, d, theta, phi, psi, pi, uu[3], vv[3], w[3], 
-  	  tempVec1[3], tempVec2[3], tempMat1[3][3], tempMat2[3][3], 
-  	  m1[3][3], m2[3][3];
+  	double a, b, c, d, theta, phi, psi, pi = 4*atan(1), uu[3], 
+  	  vv[3], w[3], tempVec1[3], tempVec2[3], tempMat1[3][3], 
+  	  tempMat2[3][3], m1[3][3], m2[3][3];
   	extra = FALSE;
-	pi = 4*atan(1);
   	uu[0] = u[0]; uu[1] = u[1]; uu[2] = u[2];
   	vv[0] = v[0]; vv[1] = v[1]; vv[2] = v[2];
   	subVectors(uu, up, tempVec1);
@@ -502,8 +543,8 @@ void eigwithknownTest() {
 // research paper and their C++ code)
 double lambdaTwistSolver(double v[3][3]) {
 	int i, j, k, numRoots, valid; 
-	double pi, a12, a23, a31, b12, b23, b31, blob, s12sq, 
-	 s23sq, s31sq, p0, p1, p2, p3, gamma, ssq, tmp, ss,  
+	double pi = 4*atan(1), a12, a23, a31, b12, b23, b31, blob, 
+	 s12sq, s23sq, s31sq, p0, p1, p2, p3, gamma, ssq, tmp, ss,  
 	 w0, w1, den, a, b, c, tau1, tau2, tau, d, l1, l2, l3, 
 	 error, minerror, 
 	 vn[3][3], vl[3], sl[3], s[3][3], sn[3][3], vndp[3],
@@ -513,8 +554,8 @@ double lambdaTwistSolver(double v[3][3]) {
 	 tempMat1[3][3], tempMat2[3][3], direction[3], 
 	 triangleNormal[3], tempVec[3], 
 
-	errorLimit = 1000,
-	tol = 0;
+	errorLimit = 1,
+	tol = 1e-20;
 
 	for(i=0; i<3; i++) {
 		vl[i] = LEN(v[i]);
@@ -532,9 +573,13 @@ double lambdaTwistSolver(double v[3][3]) {
 	crossProduct(sn[0], sn[1], triangleNormal);
 	normalize(triangleNormal, triangleNormal);
 	if (fabs(DOT(direction, triangleNormal)) < 
-	  cos(attack_angle_max*atan(1)/45)) return REJECT_TESTING_PARAMETERS;
+	  cos(attack_angle_max*pi/180) /
+		attack_angle_widening )
+		return REJECT_TESTING_PARAMETERS;
 	if (fabs(DOT(direction, triangleNormal)) > 
-	  cos(attack_angle_min*atan(1)/45)) return REJECT_TESTING_PARAMETERS;
+	  cos(attack_angle_min*pi/180) * 
+		attack_angle_widening )
+		return REJECT_TESTING_PARAMETERS;
 // continue for acceptable setups
 	start_time = clock();  
 	for(i=0; i<3; i++) {
@@ -602,7 +647,7 @@ double lambdaTwistSolver(double v[3][3]) {
 #ifdef DEBUG
 	printf("D0:\n");
 	showMatrix(D0); 
-	printf("determinant = %lf\n", determinant(D0));
+//	printf("determinant = %lf\n", determinant(D0));
 #endif
 	eigwithknown(D0, E, L); // they use A and V instead of M and E 
 	/* ssq is square of s in the paper; */ 
@@ -762,7 +807,7 @@ double lambdaTwistSolver(double v[3][3]) {
 		printf("b*b - 4.0*a*c = %lf\n", b*b - 4.0*a*c); 
 #endif
 		if (b*b - 4.0*a*c >= 0) {
-			minerror = NO_ACCEPTABLE_ESTIMATES; 
+			if (minerror < 0) minerror = NO_ACCEPTABLE_ESTIMATES; 
 			root2real(b/a, c/a, &tau1, &tau2); 
 #ifdef DEBUG
 			printf("tau1 tau2 = %lf %lf\n", tau1, tau2); 
@@ -934,11 +979,11 @@ double ellipticP3PSolver(double v[3][3]) {
 	double a, b, c, d, A, B, C, D, E, F, G, H, rootOfCubic, 
 	  tripleProd, mu0, nu0, alpha1, alpha2, alpha1sq, 
 	  alpha2sq, alphaSqDiff, alphaSqSum, eta, beta, singDot, 
-	  singLen0, singLen1, mu1, mu2, nu1, nu2, temp,   
+	  singLen0, singLen1, mu1, mu2, nu1, nu2, temp, tol,   
 	  lambda0, lambda1, lambda2, lambda, error, minerror, 
-	  tol1, tol2, tol3, tol4, tol5, tol6, tol7, 
+	  pi = 4*atan(1), 
 	  vn[3][3], vl[3], sl[3], s[3][3], sn[3][3], cn[3][3], 
-	  list[3], pi[3], singularity[2][3], vnr[3][3], snr[3][3], 
+	  list[3], singularity[2][3], vnr[3][3], snr[3][3], 
 	  cnr[3][3], vnd[3][3], dcn[3], a1[3], a2[3], nr[3], n[3], 
 	  guess[3][3], tempMat1[3][3], tempMat2[3][3], tempVec[3], 
 	  U[4], V[4], X[4], Y[4], Z[4], dp[3], rotMat[3][3], 
@@ -948,8 +993,8 @@ double ellipticP3PSolver(double v[3][3]) {
 	  direction[3], triangleNormal[3], mu10[4], mu20[4], nu10[4], 
 	  nu20[4], errors[4], 
 
-	errorLimit = 1000;
-	tol1 = tol2 = tol3 = tol4 = tol5 = tol6 = tol7 = 0;
+	errorLimit = 1;
+	tol = 1e-20;
 
 	// Phase One - Find some basic knowable geometric 
 	// quantities (also compute some unknowable ones to 
@@ -973,9 +1018,13 @@ double ellipticP3PSolver(double v[3][3]) {
 //	crossProduct(s[0], s[1], triangleNormal);
 	normalize(triangleNormal, triangleNormal);
 	if (fabs(DOT(direction, triangleNormal)) < 
-	  cos(attack_angle_max*atan(1)/45)) return REJECT_TESTING_PARAMETERS;
+	  cos(attack_angle_max*pi/180) / 
+		attack_angle_widening ) 
+		return REJECT_TESTING_PARAMETERS;
 	if (fabs(DOT(direction, triangleNormal)) > 
-	  cos(attack_angle_min*atan(1)/45)) return REJECT_TESTING_PARAMETERS;
+	  cos(attack_angle_min*pi/180) *
+		attack_angle_widening )
+		return REJECT_TESTING_PARAMETERS;
 // continue for acceptable setups 
 	start_time = clock(); 
 	for(i=0; i<3; i++) {
@@ -1021,7 +1070,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	for(int i=0; i<3; i++) {
 		mu00[i] = sqrt((1+cndp[i])/2); 
 		nu00[i] = tripleProdSign*sqrt((1-cndp[i])/2);
-		if (fabs(1-SQR(sndp[i])) > tol1) {
+		if (fabs(1-SQR(sndp[i])) > tol) {
 			alpha10[i] = (sndp[(i+2)%3] - 
 			  sndp[i]*sndp[(i+1)%3]) / (1-SQR(sndp[i])); 
 			alpha20[i] = (sndp[(i+1)%3] - 
@@ -1033,10 +1082,9 @@ double ellipticP3PSolver(double v[3][3]) {
 			printf("i mu00 nu00 alpha10 alpha20 eta0 = %d %lf %lf %lf %lf %lf\n", 
 				i, mu00[i], nu00[i], alpha10[i], alpha20[i], eta0[i]);
 #endif
-			if (eta0[i] < tol2 || fabs(mu00[i]) < tol3 || 
-			  fabs(nu00[i]) < tol3 || fabs(alpha10[i]) < tol4 ||
-			  fabs(alpha20[i]) < tol4
-/* ? */
+			if (eta0[i] < tol || fabs(mu00[i]) < tol || 
+			  fabs(nu00[i]) < tol || fabs(alpha10[i]) < tol ||
+			  fabs(alpha20[i]) < tol || fabs(eta0prime[i]) < tol
 			)
 				eligible[i] = FALSE; 
 			else {
@@ -1102,7 +1150,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	singularity[1][2] = 0; 
     singLen0 = LEN(singularity[0]); 
     singLen1 = LEN(singularity[1]); 
-    if (fabs(singLen0) < tol5 || fabs(singLen1) < tol5) {
+    if (fabs(singLen0) < tol || fabs(singLen1) < tol) {
 #ifdef DEBUG
       printf("Error: singularity too small"); 
 #endif
@@ -1216,7 +1264,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	if (numSolns == 0) minerror = NO_SYSTEM_SOLUTIONS;
 	else 
 	  for(i=0; i<numSolns; i++) {
-        if (fabs(Z[i]) > tol6) {
+        if (fabs(Z[i]) > tol) {
 		  mu10[i] = mu1 = ( (SQR(nu0)-SQR(mu0)-1)*SQR(nu0*X[i])
 		   + (SQR(mu0)-SQR(nu0)-1)*SQR(mu0*Y[i])
 		   + 2*mu0*nu0*X[i]*Y[i]
@@ -1249,9 +1297,9 @@ double ellipticP3PSolver(double v[3][3]) {
 		  printf("dp's = %lf %lf %lf\n", dp[0], dp[1], dp[2]);
 #endif
 		  if (
-		    SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0] > tol7 && 
-		    SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1] > tol7 && 
-		    SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2] > tol7 ) {
+		    SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0] > tol && 
+		    SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1] > tol && 
+		    SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2] > tol ) {
 			  lambda0 = sl[0]*dp[1]*dp[2] / 
 			    sqrt(SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0]); 
 			  lambda1 = sl[1]*dp[2]*dp[0] / 
@@ -1326,8 +1374,288 @@ double ellipticP3PSolver(double v[3][3]) {
 	return minerror; 
 }
 
-// Helpful interface to lambdaTwistSolver from Python
+// Test one of the two methods for solving the P3P problem
+void p3pTest(double (*p3pSolver)(double[3][3]), 
+	int number_trials, int first_angle, int second_angle, int third_angle, 
+	int attack_angle_min, int attack_angle_max, double attack_angle_widening, 
+	int min_lift, int max_lift, int peripheral_limit, int errorCounts[16], 
+	int failures[5], int *hits, int *misses, double *avgerror, double *stddev, 
+	double *minerror, double *maxerror, double *timeTotal) {
 
+	int i, count, index, numErrorRanges = 16;
+	double error, sum = 0, sum2 = 0, pi = 4*atan(1), lift, 
+	  M[3][3], controlPts[3][3], ctrlPts[3][3], errorRanges[16];
+
+	srand(time(0));
+	*minerror = *maxerror = -1; 
+	*timeTotal = *hits = *misses = 0; 
+	for(i=0; i<5; i++) failures[i] = 0; 
+	for(i=0; i<numErrorRanges; i++) errorCounts[i] = 0; 
+	errorRanges[1]  = .1; 
+	errorRanges[2]  = .01; 
+	errorRanges[3]  = .001; 
+	errorRanges[4]  = .0001; 
+	errorRanges[5]  = .00001; 
+	errorRanges[6]  = .000001; 
+	errorRanges[7]  = .0000001; 
+	errorRanges[8]  = .00000001; 
+	errorRanges[9]  = .000000001; 
+	errorRanges[10] = .0000000001; 
+	errorRanges[11] = .00000000001; 
+	errorRanges[12] = .000000000001; 
+	errorRanges[13] = .0000000000001;
+	errorRanges[14] = .00000000000001;
+	errorRanges[15] = .000000000000001;
+
+	for(count = 0; count < number_trials; count++) {
+		controlPts[0][0] = cos(first_angle*pi/180); 
+		controlPts[0][1] = sin(first_angle*pi/180); 
+		controlPts[0][2] = 0; 
+		controlPts[1][0] = cos(second_angle*pi/180); 
+		controlPts[1][1] = sin(second_angle*pi/180); 
+		controlPts[1][2] = 0; 
+		controlPts[2][0] = cos(third_angle*pi/180); 
+		controlPts[2][1] = sin(third_angle*pi/180); 
+		controlPts[2][2] = 0; 
+#ifdef DEBUG
+		printf("Original triangle:\n"); 
+		showVector(controlPts[0]);
+		showVector(controlPts[1]);
+		showVector(controlPts[2]);
+#endif
+		randomRotationRestricted(M, -pi, pi, 0, 0, 
+		  attack_angle_min*pi/180, 
+		  attack_angle_max*pi/180); 
+		multMatrixVector(M, controlPts[0], ctrlPts[0]); 
+		multMatrixVector(M, controlPts[1], ctrlPts[1]); 
+		multMatrixVector(M, controlPts[2], ctrlPts[2]); 
+#ifdef DEBUG
+		printf("After first rotation:\n"); 
+		showVector(ctrlPts[0]);
+		showVector(ctrlPts[1]);
+		showVector(ctrlPts[2]);
+#endif
+		lift = randomReal(min_lift, max_lift);
+		ctrlPts[0][2] += lift; 
+		ctrlPts[1][2] += lift; 
+		ctrlPts[2][2] += lift; 
+#ifdef DEBUG
+		printf("After lifting:\n"); 
+		showVector(ctrlPts[0]);
+		showVector(ctrlPts[1]);
+		showVector(ctrlPts[2]);
+#endif
+		randomRotationRestricted(M, -pi, pi, 0, 0, 
+		  -peripheral_limit*pi/180, peripheral_limit*pi/180); 
+		multMatrixVector(M, ctrlPts[0], controlPts[0]);
+		multMatrixVector(M, ctrlPts[1], controlPts[1]);
+		multMatrixVector(M, ctrlPts[2], controlPts[2]);
+#ifdef DEBUG
+		printf("After second rotation:\n");
+		showVector(controlPts[0]);
+		showVector(controlPts[1]);
+		showVector(controlPts[2]);
+		printf("\n");
+#endif
+		error = p3pSolver(controlPts);
+		if (error >= 0) {
+			sum += error; 
+			sum2 += error*error; 
+			if (*minerror < 0 || error < *minerror) 
+			 *minerror = error; 
+			if (error > *maxerror) *maxerror = error; 
+			for (i=numErrorRanges-1; i>0; i--) {
+				if (error < errorRanges[i]) {
+					errorCounts[i]++; 
+					break; 
+				}
+			}
+			if (i==0) errorCounts[0]++; 
+			(*hits)++; 
+		} else {
+			index = (int)(0.5 - error); 
+			if (index > 3) index = 0; 
+			failures[index]++; 
+			if (index > 0) (*misses)++;
+		}
+		(*timeTotal) += getTime();
+	}
+	*avgerror = sum / *hits;
+	*stddev = sqrt(sum2 / *hits - *avgerror * *avgerror);
+}
+
+// Test one of the two methods for solving the P3P problem and report results
+void singleTest() {
+
+	int i, number_trials = NUMBER_TRIALS, first_angle = FIRST_ANGLE, 
+	  second_angle = SECOND_ANGLE, third_angle = THIRD_ANGLE, 
+	  min_lift = MIN_LIFT, max_lift = MAX_LIFT, peripheral_limit = 
+	  PERIPHERAL_LIMIT, hits = 0, misses = 0, methodChoice = 0, 
+	  numErrorRanges = 16, failures[5], errorCounts[16];
+	double timeTotal = 0, stddev, avgerror, minerror = -1, maxerror = -1;
+	double (*p3pSolver)(double[3][3]); 
+
+	while (methodChoice != 1 && methodChoice != 2) {
+		printf("Which method (1 = Lambda Twist, 2 = Elliptic Curve)? ");
+		scanf("%d", &methodChoice);
+	}
+	if (methodChoice == 1) {
+		printf("\n*** Testing Lambda Twist P3P Solver ***\n\n");
+		p3pSolver = &lambdaTwistSolver;
+	}
+	if (methodChoice == 2) {
+		printf("\n*** Testing Elliptic Curve P3P Solver ***\n\n");
+		p3pSolver = &ellipticP3PSolver; 
+	}
+	printf("Starting triangle parameters: %d %d %d\n", 
+	  first_angle, second_angle, third_angle); 
+	printf("Min and max attack angles: %d %d\n", 
+	  attack_angle_min, attack_angle_max); 
+	printf("Min and max lifts: %d %d\n", min_lift, max_lift); 
+	printf("Peripheral_limit: %d\n", peripheral_limit); 
+	printf("Number of trials: %d\n", number_trials);
+
+	p3pTest(p3pSolver, number_trials, first_angle, second_angle, third_angle, 
+	  attack_angle_min, attack_angle_max, attack_angle_widening, min_lift, 
+	  max_lift, peripheral_limit, errorCounts, failures, &hits, &misses, 
+	  &avgerror, &stddev, &minerror, &maxerror, &timeTotal);
+
+	printf("average error = %lg\n", avgerror);
+	printf("standard deviation = %lg\n", stddev);
+	printf("minimum error = %lg\n", minerror);
+	printf("maximum error = %lg\n", maxerror);
+	printf("number of hits = %d\n", hits);
+	printf("number of misses %d\n", misses);
+	printf("success rate = %8.5f%%\n", 100.0*hits/(hits+misses));
+	printf("number rejected test cases (outside testing parameters) = %d\n", 
+		failures[0]); 
+	printf("number failures due to no acceptable estimates = %d\n", 
+		failures[1]); 
+	printf("number failures due to no algebraic system solutions = %d\n", 
+		failures[2]); 
+	if (p3pSolver == &ellipticP3PSolver) { 
+		printf("number failures due to small singularity = %d\n", 
+			failures[3]); 
+		printf("number failures due to no eligible rotations = %d\n", 
+			failures[4]); 
+	}
+	for (i=0; i<numErrorRanges; i++) 
+//		printf("Count for range #%2d: %d\n", i, errorCounts[i]); 
+		printf("Percentage of errors in range 10^-%02d to 10^-%02d: %9.5f%%\n", i+1, i, 
+			errorCounts[i]*100.0/(hits+misses)); 
+	printf("Execution time: %lf\n\n", timeTotal); 
+}
+
+void multipleTests() {
+
+	int number_trials = NUMBER_TRIALS, first_angle = FIRST_ANGLE, 
+	  second_angle = SECOND_ANGLE, third_angle = THIRD_ANGLE, 
+	  min_lift = MIN_LIFT, max_lift = MAX_LIFT, peripheral_limit = 
+	  PERIPHERAL_LIMIT, hits = 0, misses = 0, methodChoice = 0, 
+	  numErrorRanges = 16, numTriangles = 3, numAttackRanges = 3, 
+	  numLiftRanges = 3, i, j, k, l, 
+
+	  failures[5], errorCounts[16],
+
+	  attackRanges[3][2] = { {0,30}, {30,60}, {60,90} }, 
+	  liftRanges[4][2] = { {2,100}, {100,200}, {200,300} },
+	  triangles[3][3] = { {0, 80, 230}, {0, 70, 300}, {0, 121, 241} };
+
+	double timeTotal = 0, stddev, avgerror, minerror = -1, maxerror = -1, 
+	  errorPercentages[16];
+
+	char s1[] = "Method, Min_Attack, Max_Attack, Min_Lift, Max_Lift, "; 
+	char s2[] = "Angle_1, Angle_2, Angle_3, Time, Hits, Misses, Fail_0, Fail_1, Fail_2, ";
+	char s3[] = "Fail_3, Fail_4, Avg_Error, Std_Dev, Min_Error, Max_Error, "; 
+	char s4[] = "Rng_0%%, Rng_1%%, Rng_2%%, Rng_3%%, Rng_4%%, Rng_5%%, Rng_6%%, Rng_7%%, Rng_8%%, "; 
+	char s5[] = "Rng_9%%, Rng_10%%, Rng_11%%, Rng_12%%, Rng_13%%, Rng_14%%, Rng_15%%\n\n"; 
+	char s6[] = "LT, %d, %d, %d, %d, %d, %d, %d, %lf, %d, %d, %d, %d, %d, %d, "; 
+	char s7[] = "%d, %lg, %lg, %lg, %lg, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, "; 
+	char s8[] = " %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n";
+	char header[500], lineLT[500], lineEC[500]; 
+	header[0] = lineLT[0] = lineEC[0] = '\0'; 
+	strcat(header, s1);
+	strcat(header, s2);
+	strcat(header, s3);
+	strcat(header, s4);
+	strcat(header, s5);
+	strcat(lineLT, s6);
+	strcat(lineLT, s7);
+	strcat(lineLT, s8);
+	strcat(lineEC, lineLT);
+	lineEC[0] = 'E'; lineEC[1] = 'C'; 
+
+	printf("%s", header);
+	
+	for (i = 0; i < numAttackRanges; i++) {
+		attack_angle_min = attackRanges[i][0];
+		attack_angle_max = attackRanges[i][1];
+		for (j = 0; j < numLiftRanges; j++) {
+			min_lift = liftRanges[j][0];
+			max_lift = liftRanges[j][1];
+			for (k = 0; k < numTriangles; k++) {
+				first_angle  = triangles[k][0]; 
+				second_angle = triangles[k][1]; 
+				third_angle  = triangles[k][2];
+
+				p3pTest(&lambdaTwistSolver, number_trials, first_angle, 
+				  second_angle, third_angle, attack_angle_min, attack_angle_max, 
+				  attack_angle_widening, min_lift, max_lift, peripheral_limit, 
+				  errorCounts, failures, &hits, &misses, &avgerror, &stddev, 
+				  &minerror, &maxerror, &timeTotal);
+
+				for(l=0; l<numErrorRanges; l++) 
+				  errorPercentages[l] = 100.0 * errorCounts[l] / (hits+misses); 
+
+				printf(lineLT,
+				  attack_angle_min, attack_angle_max, min_lift, max_lift, 
+				  first_angle, second_angle, third_angle, timeTotal, hits, misses, 
+				  failures[0], failures[1], failures[2], failures[3], failures[4], 
+				  avgerror, stddev, minerror, maxerror, 
+				  errorPercentages[0], errorPercentages[1], errorPercentages[2], errorPercentages[3], 
+				  errorPercentages[4], errorPercentages[5], errorPercentages[6], errorPercentages[7], 
+				  errorPercentages[8], errorPercentages[9], errorPercentages[10], errorPercentages[11], 
+				  errorPercentages[12], errorPercentages[13], errorPercentages[14], errorPercentages[15]);
+
+				p3pTest(&ellipticP3PSolver, number_trials, first_angle, 
+				  second_angle, third_angle, attack_angle_min, attack_angle_max, 
+				  attack_angle_widening, min_lift, max_lift, peripheral_limit, 
+				  errorCounts, failures, &hits, &misses, &avgerror, &stddev, 
+				  &minerror, &maxerror, &timeTotal);
+
+				for(l=0; l<numErrorRanges; l++) 
+				  errorPercentages[l] = 100.0 * errorCounts[l] / (hits+misses); 
+
+				printf(lineEC,
+				  attack_angle_min, attack_angle_max, min_lift, max_lift, 
+				  first_angle, second_angle, third_angle, timeTotal, hits, misses, 
+				  failures[0], failures[1], failures[2], failures[3], failures[4], 
+				  avgerror, stddev, minerror, maxerror, 
+				  errorPercentages[0], errorPercentages[1], errorPercentages[2], errorPercentages[3], 
+				  errorPercentages[4], errorPercentages[5], errorPercentages[6], errorPercentages[7], 
+				  errorPercentages[8], errorPercentages[9], errorPercentages[10], errorPercentages[11], 
+				  errorPercentages[12], errorPercentages[13], errorPercentages[14], errorPercentages[15]); 
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+
+}
+
+int main() {
+
+//	singleTest(); 
+	multipleTests();
+
+}
+
+// Functions to help with external interface (from Python perhaps)
+
+void set_attack_angle_min(int degrees) { attack_angle_min = degrees; }
+void set_attack_angle_max(int degrees) { attack_angle_max = degrees; }
+void set_attack_angle_widening(double factor) 
+  { attack_angle_widening = factor; }
 double solveLT(double v00, double v01, double v02, double v10, 
   double v11, double v12, double v20, double v21, double v22) {
 	double v[3][3]; 
@@ -1336,9 +1664,6 @@ double solveLT(double v00, double v01, double v02, double v10,
 	v[2][0] = v20; v[2][1] = v21; v[2][2] = v22; 
 	return lambdaTwistSolver(v);
 }
-
-// Helpful interface to ellipticP3Psolver from Python
-
 double solveEP(double v00, double v01, double v02, double v10, 
   double v11, double v12, double v20, double v21, double v22) {
 	double v[3][3]; 
@@ -1348,109 +1673,4 @@ double solveEP(double v00, double v01, double v02, double v10,
 	return ellipticP3PSolver(v);
 }
 
-// Test one of the two methods for solving the P3P problem 
-int main() {
 
-	int i, count, hits = 0, misses = 0, index, 
-	  failure[5], errorCounts[17], numErrorRanges;
-	double controlPts[3][3], error, sum = 0, sum2 = 0, 
-	  timeTotal = 0, avgerror, minerror = -1, maxerror = -1, 
-	  stddev, errorRanges[17];
-
-	srand(time(0));
-	for(i=0; i<5; i++) failure[i] = 0; 
-	for(i=0; i<17; i++) errorCounts[i] = 0; 
-	errorRanges[1]  = 1; 
-	errorRanges[2]  = .1; 
-	errorRanges[3]  = .01; 
-	errorRanges[4]  = .001; 
-	errorRanges[5]  = .0001; 
-	errorRanges[6]  = .00001; 
-	errorRanges[7]  = .000001; 
-	errorRanges[8]  = .0000001; 
-	errorRanges[9]  = .00000001; 
-	errorRanges[10] = .000000001; 
-	errorRanges[11] = .0000000001; 
-	errorRanges[12] = .00000000001; 
-	errorRanges[13] = .000000000001; 
-	errorRanges[14] = .0000000000001;
-	errorRanges[15] = .00000000000001;
-	errorRanges[16] = .000000000000001;
-	numErrorRanges = 17;
-
-	for(count = 0; count < NUMBER_TRIALS; count++) {
-
-		controlPts[0][0] = 1500. + randomReal(0,1); 
-		controlPts[0][1] = 700.  + randomReal(0,1); 
-		controlPts[0][2] = 800.  + randomReal(0,1);
-		controlPts[1][0] = 1500. + randomReal(0,1);
-		controlPts[1][1] = 700.  + randomReal(0,1);
-		controlPts[1][2] = 800.  + randomReal(0,1);
-		controlPts[2][0] = 1500. + randomReal(0,1);
-		controlPts[2][1] = 700.  + randomReal(0,1);
-		controlPts[2][2] = 800.  + randomReal(0,1);
-
-		controlPts[0][0] = 20. + randomReal(0,1); 
-		controlPts[0][1] = 30.  + randomReal(0,1); 
-		controlPts[0][2] = 00.  + randomReal(0,1);
-		controlPts[1][0] = 20. + randomReal(0,1);
-		controlPts[1][1] = 30.  + randomReal(0,1);
-		controlPts[1][2] = 00.  + randomReal(0,1);
-		controlPts[2][0] = 20. + randomReal(0,1);
-		controlPts[2][1] = 30.  + randomReal(0,1);
-		controlPts[2][2] = 00.  + randomReal(0,1);
-
-#ifdef TEST_LAMBDA_TWIST
-		error = lambdaTwistSolver(controlPts);
-#else 
-		error = ellipticP3PSolver(controlPts);
-#endif 
-		if (error >= 0) {
-			sum += error; 
-			sum2 += error*error; 
-			if (minerror < 0 || error < minerror) 
-			 minerror = error; 
-			if (error > maxerror) maxerror = error; 
-			for (i=numErrorRanges-1; i>0; i--) {
-				if (error < errorRanges[i]) {
-					errorCounts[i]++; 
-					break; 
-				}
-			}
-			if (i==0) errorCounts[0]++; 
-			hits++; 
-			/*printf("error = %lf\n", error);*/
-		} else {
-			index = (int)(0.5 - error); 
-			if (index > 3) index = 0; 
-			failure[index]++; 
-			if (index > 0) misses++;
-			/*printf("failure code = %d\n", index);*/
-		}
-		timeTotal += getTime();
-	}
-	avgerror = sum/hits;
-	stddev = sqrt(sum2/hits - avgerror*avgerror);
-	printf("average error = %lg\n", avgerror);
-	printf("standard deviation = %lg\n", stddev);
-	printf("minimum error = %lg\n", minerror);
-	printf("maximum error = %lg\n", maxerror);
-	printf("number of hits = %d\n", hits);
-	printf("number of misses %d\n", misses);
-	printf("success rate = %f%%\n", 100.*hits/(hits+misses));
-	printf("number rejected test cases (outside testing parameters) = %d\n", 
-		failure[0]); 
-	printf("number failures due to no acceptable estimates = %d\n", 
-		failure[1]); 
-	printf("number failures due to no algebraic system solutions = %d\n", 
-		failure[2]); 
-#ifndef TEST_LAMBDA_TWIST	
-	printf("number failures due to small singularity = %d\n", 
-		failure[3]); 
-	printf("number failures due to no eligible rotations = %d\n", 
-		failure[4]); 
-#endif 
-	for (i=0; i<numErrorRanges; i++) 
-		printf("Count for range #%2d: %d\n", i, errorCounts[i]); 
-	printf("Execution time: %lf\n", timeTotal); 
-}
