@@ -18,10 +18,6 @@
 #include <time.h>
 #include <string.h>
 
-// Comment out if you want main() to use the Elliptic Curve method 
-// instead of the Lambda Twist method:
-//#define TEST_LAMBDA_TWIST
-
 // How many trials should main() execute? 
 #define NUMBER_TRIALS 1000
 
@@ -44,7 +40,7 @@
 // Starting test triangle angles (for "same triangle" testing)
 #define FIRST_ANGLE 0
 #define SECOND_ANGLE 80
-#define THIRD_ANGLE 220
+#define THIRD_ANGLE 230
 
 // Random elevation of triangle limits (for "same triangle" testing)
 #define MIN_LIFT 100
