@@ -25,6 +25,9 @@
 // How many trials should main() execute? 
 #define NUMBER_TRIALS 1000
 
+// Do multiple tests, instead of single test 
+//#define MULTIPLE_TESTS
+
 // A couple levels of debugging capability:
 //#define DEBUG
 //#define DEBUG2
@@ -48,14 +51,14 @@
 #define MAX_LIFT 200
 
 // Maximum rotation angle after elevating (for "same triangle" testing)
-#define PERIPHERAL_LIMIT 60
+#define PERIPHERAL_LIMIT 90
 
 // Use the Newton-Raphson method to find root of cubic polynomial,
 // provided by Persson and Nordberg, instead of my algebraic method? 
 #define USE_CUBICK_FOR_CUBICS
 // Parameters for Newton-Raphson method
-#define KLAS_P3P_CUBIC_SOLVER_ITER 70 
-#define NUMERIC_LIMIT 1e-40
+#define KLAS_P3P_CUBIC_SOLVER_ITER 100 
+#define NUMERIC_LIMIT 1e-50
 
 #define FALSE 0 
 #define TRUE 1 
@@ -1645,8 +1648,11 @@ void multipleTests() {
 
 int main() {
 
-//	singleTest(); 
+#ifdef MULTIPLE_TESTS
 	multipleTests();
+#else
+	singleTest(); 
+#endif
 
 }
 
