@@ -19,7 +19,7 @@
 #include <string.h>
 
 // How many trials should main() execute? 
-#define NUMBER_TRIALS 10000
+#define NUMBER_TRIALS 1000000
 
 // Do multiple tests, instead of single test 
 //#define MULTIPLE_TESTS
@@ -31,8 +31,8 @@
 
 // Set attack angle range to restrict the rotation that precedes 
 // the lifting step (for single test)
-#define ATTACK_ANGLE_MIN 0
-#define ATTACK_ANGLE_MAX 30
+#define ATTACK_ANGLE_MIN 60
+#define ATTACK_ANGLE_MAX 90
 
 // Starting test triangle angles (for single test)
 #define FIRST_ANGLE 0
@@ -954,7 +954,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	double a, b, c, d, A, B, C, D, E, F, G, H, rootOfCubic, 
 	  tripleProd, mu0, nu0, alpha1, alpha2, alpha1sq, 
 	  alpha2sq, alphaSqDiff, alphaSqSum, eta, beta, singDot, 
-	  singLen0, singLen1, mu1, mu2, nu1, nu2, temp, tol,   
+	  singLen0, singLen1, mu1, mu2, nu1, nu2, temp, tol, tol2,
 	  lambda0, lambda1, lambda2, lambda, error, minerror, 
 	  pi = 4*atan(1), 
 	  vn[3][3], vl[3], sl[3], s[3][3], sn[3][3], cn[3][3], 
@@ -969,7 +969,8 @@ double ellipticP3PSolver(double v[3][3]) {
 	  nu20[4], errors[4], 
 
 	errorLimit = 1;
-	tol = 1e-20;
+	tol2 = tol = 1e-20;
+	//tol2 = 0.00000001; 
 
 	// Phase One - Find some basic knowable geometric 
 	// quantities (also compute some unknowable ones to 
@@ -1041,9 +1042,9 @@ double ellipticP3PSolver(double v[3][3]) {
 			printf("i mu00 nu00 alpha10 alpha20 eta0 = %d %lf %lf %lf %lf %lf\n", 
 				i, mu00[i], nu00[i], alpha10[i], alpha20[i], eta0[i]);
 #endif
-			if (eta0[i] < tol || fabs(mu00[i]) < tol || 
+			if (eta0[i] < 0 || fabs(mu00[i]) < tol || 
 			  fabs(nu00[i]) < tol || fabs(alpha10[i]) < tol ||
-			  fabs(alpha20[i]) < tol || fabs(eta0prime[i]) < tol
+			  fabs(alpha20[i]) < tol || fabs(eta0prime[i]) < tol2
 			)
 				eligible[i] = FALSE; 
 			else {
@@ -1191,7 +1192,7 @@ double ellipticP3PSolver(double v[3][3]) {
     E = (1-SQR(alpha1+alpha2))*(1-SQR(alpha1-alpha2))*mu0*mu0; 
 	A /= (singLen0*singLen1); 
 	B /= SQR(singLen0); 
-	C /= SQR(singLen1); 
+	C /= SQR(singLen1);
 	D /= (singLen0*singLen1); 
 	F = dcn[0]; 
 	G = dcn[1]; 
@@ -1432,7 +1433,7 @@ void p3pTest(double (*p3pSolver)(double[3][3]),
 			(*hits)++; 
 		} else {
 			index = (int)(0.5 - error); 
-			if (index > 3) index = 0; 
+			if (index > 10) index = 0;
 			failures[index]++; 
 			if (index > 0) (*misses)++;
 		}
@@ -1598,7 +1599,6 @@ void multipleTests() {
 		}
 		printf("\n");
 	}
-
 }
 
 int main() {
