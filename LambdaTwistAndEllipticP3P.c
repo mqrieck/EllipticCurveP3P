@@ -39,7 +39,7 @@
 #define SECOND_ANGLE 80
 #define THIRD_ANGLE 230
 
-// Random elevation of triangle limits
+// Random elevation of triangle limits (for single test)
 #define MIN_LIFT 10
 #define MAX_LIFT 20
 
