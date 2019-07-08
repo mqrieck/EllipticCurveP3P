@@ -34,17 +34,17 @@
 #define ATTACK_ANGLE_MIN 00
 #define ATTACK_ANGLE_MAX 30
 
-// Starting test triangle angles (for single test)
-#define FIRST_ANGLE 0
-#define SECOND_ANGLE 80
-#define THIRD_ANGLE 230
-
 // Random elevation of triangle limits (for single test)
 #define MIN_LIFT 10
 #define MAX_LIFT 20
 
 // Maximum rotation angle after lifting (for single test)
 #define ANGLE_OF_VIEW 90
+
+// Starting test triangle angles (for single test)
+#define FIRST_ANGLE 0
+#define SECOND_ANGLE 80
+#define THIRD_ANGLE 230
 
 // Use the Newton-Raphson method to find root of cubic polynomial,
 // provided by Persson and Nordberg, instead of my algebraic method? 
@@ -1516,7 +1516,7 @@ void multipleTests() {
 	  hits = 0, misses = 0, methodChoice = 0, numErrorRanges = 16, 
 	  failures[5], errorCounts[16],
 
-	  numAttackRanges = 3, numLiftRanges = 3, numTriangles = 2,
+	  numAttackRanges = 3, numLiftRanges = 3, numTriangles = 6,
 
 	  attackRanges[3][2] = { {0,30}, {30,60}, {60,90} }, 
 	  liftRanges[4][2] = { {10,20}, {100,200}, {1000, 2000} },
