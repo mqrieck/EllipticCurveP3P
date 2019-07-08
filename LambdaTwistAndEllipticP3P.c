@@ -163,7 +163,7 @@ void transposeMatrix(double m[3][3], double mt[3][3]) {
 void invertMatrix(double m[3][3], double mi[3][3]) {
 	double det; 
 	det = 
-	    m[0][0]*m[1][1]*m[2][2] 
+		m[0][0]*m[1][1]*m[2][2] 
 	  + m[0][1]*m[1][2]*m[2][0] 
 	  + m[0][2]*m[1][0]*m[2][1] 
 	  - m[0][0]*m[1][2]*m[2][1] 
@@ -352,36 +352,36 @@ int rotateTriple(double u[3], double v[3], double w[3],
 // of Persson and Nordberg)
 double cubick(double b, double c, double d) {
 #if 1
-    double r0;
-    if (b*b  >= 3.0*c) {
-        double v = sqrt(b*b-3.0*c);
-        double t1 = (-b - v)/(3.0);
-        double k = ((t1+b)*t1+c)*t1+d;
-        if (k > 0.0) {
-            r0 = t1 - sqrt(-k/(3.0*t1 + b));
-        } else {
-            double t2 = (-b + v)/(3.0);
-            k = ((t2+b)*t2+c)*t2+d;
-            r0 = t2 + sqrt(-k/(3.0*t2 + b));
-        }
-    }
-    else{
-        r0 = -b/3.0;
-        if (fabs(((3.0*r0+2.0*b)*r0+c))<1e-4) r0 += 1;
-    }
+	double r0;
+	if (b*b  >= 3.0*c) {
+		double v = sqrt(b*b-3.0*c);
+		double t1 = (-b - v)/(3.0);
+		double k = ((t1+b)*t1+c)*t1+d;
+		if (k > 0.0) {
+			r0 = t1 - sqrt(-k/(3.0*t1 + b));
+		} else {
+			double t2 = (-b + v)/(3.0);
+			k = ((t2+b)*t2+c)*t2+d;
+			r0 = t2 + sqrt(-k/(3.0*t2 + b));
+		}
+	}
+	else{
+		r0 = -b/3.0;
+		if (fabs(((3.0*r0+2.0*b)*r0+c))<1e-4) r0 += 1;
+	}
 #endif
-    double fx,fpx;    
-    for (unsigned int cnt = 0; cnt < KLAS_P3P_CUBIC_SOLVER_ITER; ++cnt)
-    {
-        fx=(((r0+b)*r0+c)*r0+d);
-        if (cnt < 7 || fabs(fx) > NUMERIC_LIMIT) {
-            fpx=((3.0*r0+2.0*b)*r0+c);
-            r0-= fx/fpx;
-        }
-        else
-            break;
-    }
-    return r0;
+	double fx,fpx;    
+	for (unsigned int cnt = 0; cnt < KLAS_P3P_CUBIC_SOLVER_ITER; ++cnt)
+	{
+		fx=(((r0+b)*r0+c)*r0+d);
+		if (cnt < 7 || fabs(fx) > NUMERIC_LIMIT) {
+			fpx=((3.0*r0+2.0*b)*r0+c);
+			r0-= fx/fpx;
+		}
+		else
+			break;
+	}
+	return r0;
 }
 
 // Return a real root of a cubic polynomial (mostly algebraic method)
@@ -402,25 +402,25 @@ double realRootOfCubic(double a, double b, double c, double d) {
 	   sqt = sqrt(del/108);
 	   root = cbrt(-q/2+sqt)+cbrt(-q/2-sqt);
 #ifdef DEBUG
-       printf("only real root of depressed cubic: %lf\n", root);
+	   printf("only real root of depressed cubic: %lf\n", root);
 #endif
 	} else {
-       rt1 =  2*sqrt(-p/3)*cos(acos( 3*q*sqrt(-3/p)/(2*p))/3); 
-       rt2 = -2*sqrt(-p/3)*cos(acos(-3*q*sqrt(-3/p)/(2*p))/3); 
-       rt3 = -rt1-rt2; 
+	   rt1 =  2*sqrt(-p/3)*cos(acos( 3*q*sqrt(-3/p)/(2*p))/3); 
+	   rt2 = -2*sqrt(-p/3)*cos(acos(-3*q*sqrt(-3/p)/(2*p))/3); 
+	   rt3 = -rt1-rt2; 
 #ifdef DEBUG
-       printf("roots of depressed cubic: %lf %lf %lf\n", 
-       	 rt1, rt2, rt3);
+	   printf("roots of depressed cubic: %lf %lf %lf\n", 
+	   	 rt1, rt2, rt3);
 #endif
-       root = rt1;
-       if (rt2 > root) root = rt2;
-       if (rt3 > root) root = rt3;
+	   root = rt1;
+	   if (rt2 > root) root = rt2;
+	   if (rt3 > root) root = rt3;
 	}
 	root = root - b/(3*a); 
 #ifdef DEBUG
 	printf("real root of cubic: %lf\n", root);
 #endif
-    if (flip) return 1/root; else return root; 
+	if (flip) return 1/root; else return root; 
 }
 
 // Get roots of a quadratic polynomial 
@@ -428,20 +428,20 @@ double realRootOfCubic(double a, double b, double c, double d) {
 // of Persson and Nordberg)
 int root2real(double b, double c, 
   double* r1, double* r2){
-    double v = b*b - 4.0*c;
-    if (v < 0){
-        *r1 = *r2 = 0.5*b;
-        return FALSE;
-    }
-    double y = sqrt(v);
-    if (b < 0){
-        *r1= 0.5*(-b+y);
-        *r2= 0.5*(-b-y);
-    } else {
-        *r1= 2.0*c/(-b+y);
-        *r2= 2.0*c/(-b-y);
-    }
-    return TRUE;
+	double v = b*b - 4.0*c;
+	if (v < 0){
+		*r1 = *r2 = 0.5*b;
+		return FALSE;
+	}
+	double y = sqrt(v);
+	if (b < 0){
+		*r1= 0.5*(-b+y);
+		*r2= 0.5*(-b-y);
+	} else {
+		*r1= 2.0*c/(-b+y);
+		*r2= 2.0*c/(-b-y);
+	}
+	return TRUE;
 }
 
 // Obtain eigenvalues and eigenvectors for special symmetic matrix 
@@ -575,9 +575,9 @@ double lambdaTwistSolver(double v[3][3]) {
 	s12sq = 1.0 - b12*b12; //SQR(b12); 
 	p0 = a12*(a12*s23sq-a23*s12sq); 
 	p1 =  - ( a23*(a31-a23)*s12sq - a12*a12*s23sq 
-	          - 2.0*a12*(blob*a23 + a31*s23sq) );  
+			  - 2.0*a12*(blob*a23 + a31*s23sq) );  
 	p2 =  2.0*blob*a23*a31 + a31*(2.0*a12+a31)*s23sq 
-	         + a23*(a23-a12)*s31sq; 
+			 + a23*(a23-a12)*s31sq; 
 	p3 =  -a31*(a23*s31sq-a31*s23sq);
 #ifdef DEBUG
 	printf("v[0] = %lf %lf %lf\n", v[0][0], v[0][1], v[0][2]); 
@@ -698,7 +698,7 @@ double lambdaTwistSolver(double v[3][3]) {
 			  l1 = w0*l2 + w1*l3; 
 #ifdef DEBUG
 			  printf("(tau1>0) tau1 l1 l2 l3 = %lf %lf %lf %lf\n", 
-			    tau1, l1, l2, l3); 
+				tau1, l1, l2, l3); 
 #endif
 			  if (l1 >= 0) {
 				Ls[valid][0] = l1; 
@@ -735,7 +735,7 @@ double lambdaTwistSolver(double v[3][3]) {
 			  l1 = w0*l2 + w1*l3; 
 #ifdef DEBUG
 			  printf("(tau2>0) tau2 l1 l2 l3 = %lf %lf %lf %lf\n", 
-			    tau2, l1, l2, l3); 
+				tau2, l1, l2, l3); 
 #endif
 			  if (l1 >= 0) {
 				Ls[valid][0] = l1; 
@@ -794,7 +794,7 @@ double lambdaTwistSolver(double v[3][3]) {
 			  l1 = w0*l2 + w1*l3; 
 #ifdef DEBUG
 			  printf("(tau1>0) tau1 l1 l2 l3 = %lf %lf %lf %lf\n", 
-			    tau1, l1, l2, l3); 
+				tau1, l1, l2, l3); 
 #endif
 			  if (l1 >= 0) {
 				Ls[valid][0] = l1; 
@@ -831,7 +831,7 @@ double lambdaTwistSolver(double v[3][3]) {
 			  l1 = w0*l2 + w1*l3; 
 #ifdef DEBUG
 			  printf("(tau2>0) tau2 l1 l2 l3 = %lf %lf %lf %lf\n", 
-			    tau2, l1, l2, l3); 
+				tau2, l1, l2, l3); 
 #endif
 			  if (l1 >= 0) {
 				Ls[valid][0] = l1; 
@@ -865,11 +865,11 @@ double lambdaTwistSolver(double v[3][3]) {
 	}
 #ifdef DEBUG2
 	if (minerror < 0 || minerror > DEBUG2_CUTOFF) {
-    	printf("minimum error = %lf\n", minerror);
-    	printf("distance = %lf\n", 
-    	  (LEN(v[0])+LEN(v[1])+LEN(v[2]))/3); 
-    	printf("size = %lf\n\n", 
-    	  (LEN(s[0])+LEN(s[1])+LEN(s[2]))/3); 
+		printf("minimum error = %lf\n", minerror);
+		printf("distance = %lf\n", 
+		  (LEN(v[0])+LEN(v[1])+LEN(v[2]))/3); 
+		printf("size = %lf\n\n", 
+		  (LEN(s[0])+LEN(s[1])+LEN(s[2]))/3); 
 	}
 #endif	
 	end_time = clock(); 
@@ -882,34 +882,34 @@ int allRealRootsOfDepressedQuartic(double p, double q, double r,
   double shift, double roots[]) {
 
   	int count = 0; 
-    double rootOfCubic, part1, part2, part3, part4, part5;
+	double rootOfCubic, part1, part2, part3, part4, part5;
 #ifdef USE_CUBICK_FOR_CUBICS
-    rootOfCubic = cubick(p, (SQR(p)-4*r)/4, -SQR(q)/8);
+	rootOfCubic = cubick(p, (SQR(p)-4*r)/4, -SQR(q)/8);
 #else
-    rootOfCubic = 
-      realRootOfCubic(8, 8*p, 2*SQR(p)-8*r, -SQR(q));
+	rootOfCubic = 
+	  realRootOfCubic(8, 8*p, 2*SQR(p)-8*r, -SQR(q));
 #endif
-    part1 = sqrt(2*rootOfCubic);
-    part2 = sqrt(2/rootOfCubic); 
-    part3 = -2*(p+rootOfCubic);
+	part1 = sqrt(2*rootOfCubic);
+	part2 = sqrt(2/rootOfCubic); 
+	part3 = -2*(p+rootOfCubic);
 #ifdef DEBUG
-    printf("selected root of cubic = %lf\n", rootOfCubic); 
-    printf("shift = %lf\n", shift); 
-    printf("part1 part2 part3 = %lf %lf %lf\n", part1, part2, part3);
+	printf("selected root of cubic = %lf\n", rootOfCubic); 
+	printf("shift = %lf\n", shift); 
+	printf("part1 part2 part3 = %lf %lf %lf\n", part1, part2, part3);
 #endif
-    part4 = part3-q*part2;
-    part5 = part3+q*part2;
-    if (part4 >= 0) {
-      part4 = sqrt(part4);
-      roots[count++] = shift + (part1+part4)/2; 
-      roots[count++] = shift + (part1-part4)/2; 
-    } 
-    if (part5 >= 0) {
-      part5 = sqrt(part5);
-      roots[count++] = shift + (-part1+part5)/2; 
-      roots[count++] = shift + (-part1-part5)/2; 
-    } 
-    return count; 
+	part4 = part3-q*part2;
+	part5 = part3+q*part2;
+	if (part4 >= 0) {
+	  part4 = sqrt(part4);
+	  roots[count++] = shift + (part1+part4)/2; 
+	  roots[count++] = shift + (part1-part4)/2; 
+	} 
+	if (part5 >= 0) {
+	  part5 = sqrt(part5);
+	  roots[count++] = shift + (-part1+part5)/2; 
+	  roots[count++] = shift + (-part1-part5)/2; 
+	} 
+	return count; 
 }
 
 // Solve a system of two equations, one involving a quartic 
@@ -1057,7 +1057,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	}
 	if (tempInt < 0) {
 #ifdef DEBUG
-      printf("Error: no eligible rotations"); 
+	  printf("Error: no eligible rotations"); 
 #endif
 	  return NO_ELIGIBLE_ROTATION; 
 	}
@@ -1099,9 +1099,9 @@ double ellipticP3PSolver(double v[3][3]) {
 	printf("eta beta = %lf %lf\n", eta, beta);
 #endif
 
-    // Phase Three - Compute rotation matrix, its inverse 
-    // and the images of some vectors; Also compute the 
-    // a few vectors under the deforming transformation 
+	// Phase Three - Compute rotation matrix, its inverse 
+	// and the images of some vectors; Also compute the 
+	// a few vectors under the deforming transformation 
 	// This phase alse computes the two singularities for 
 	// the original quartic in X, Y and Z, thereby 
 	// obtaining the deformation matrix and its inverse   
@@ -1112,88 +1112,88 @@ double ellipticP3PSolver(double v[3][3]) {
 	singularity[1][0] = 1 + sqrt(eta); 
 	singularity[1][1] = -2*alphaSqDiff*mu0*nu0;
 	singularity[1][2] = 0; 
-    singLen0 = LEN(singularity[0]); 
-    singLen1 = LEN(singularity[1]); 
-    if (fabs(singLen0) < tol || fabs(singLen1) < tol) {
+	singLen0 = LEN(singularity[0]); 
+	singLen1 = LEN(singularity[1]); 
+	if (fabs(singLen0) < tol || fabs(singLen1) < tol) {
 #ifdef DEBUG
-      printf("Error: singularity too small"); 
+	  printf("Error: singularity too small"); 
 #endif
-      return SINGULARITY_TOO_SMALL; 
-    }
+	  return SINGULARITY_TOO_SMALL; 
+	}
 	normalize(singularity[0], singularity[0]); 
 	normalize(singularity[1], singularity[1]); 
-    singDot = DOT(singularity[0],singularity[1]);
+	singDot = DOT(singularity[0],singularity[1]);
 #ifdef DEBUG
-    printf("lengths = %lf %lf\n", singLen0, singLen1); 
-    printf("first singularity = %lf %lf %lf\n", singularity[0][0], 
-    	singularity[0][1], singularity[0][2]);
-    printf("second singularity = %lf %lf %lf\n", singularity[1][0], 
-    	singularity[1][1], singularity[1][2]);
-    printf("dot prod of these = %lf\n", singDot); 
+	printf("lengths = %lf %lf\n", singLen0, singLen1); 
+	printf("first singularity = %lf %lf %lf\n", singularity[0][0], 
+	  singularity[0][1], singularity[0][2]);
+	printf("second singularity = %lf %lf %lf\n", singularity[1][0], 
+	  singularity[1][1], singularity[1][2]);
+	printf("dot prod of these = %lf\n", singDot); 
 #endif 
-    defMat[0][0] = singularity[0][0]; 
-    defMat[1][0] = singularity[0][1]; 
-    defMat[2][0] = singularity[0][2]; 
-    defMat[0][1] = singularity[1][0]; 
-    defMat[1][1] = singularity[1][1]; 
-    defMat[2][1] = singularity[1][2]; 
-    defMat[0][2] = defMat[1][2] = 0; 
-    defMat[2][2] = 1; 
-    invertMatrix(defMat, invDefMat); 
-    randomRotate = rotateTriple(vn[rotChoice], vn[(rotChoice+1)%3], 
-      vn[(rotChoice+2)%3], rotMat);
-    invertMatrix(rotMat, invRotMat); 
-    multMatrixVector(rotMat, vn[0], vnr[0]); 
-    multMatrixVector(rotMat, vn[1], vnr[1]); 
-    multMatrixVector(rotMat, vn[2], vnr[2]); 
-    multMatrixVector(rotMat, sn[0], snr[0]); 
-    multMatrixVector(rotMat, sn[1], snr[1]); 
-    multMatrixVector(rotMat, sn[2], snr[2]); 
-    multMatrixVector(rotMat, cn[0], cnr[0]); 
-    multMatrixVector(rotMat, cn[1], cnr[1]); 
-    multMatrixVector(rotMat, cn[2], cnr[2]); 
-    multMatrixVector(invDefMat, vnr[0], vnd[0]); 
-    multMatrixVector(invDefMat, vnr[1], vnd[1]); 
-    multMatrixVector(invDefMat, vnr[2], vnd[2]); 
-    crossProduct(vnd[(rotChoice+1)%3], vnd[(rotChoice+2)%3], dcn);
-    normalize(dcn, dcn);
+	defMat[0][0] = singularity[0][0]; 
+	defMat[1][0] = singularity[0][1]; 
+	defMat[2][0] = singularity[0][2]; 
+	defMat[0][1] = singularity[1][0]; 
+	defMat[1][1] = singularity[1][1]; 
+	defMat[2][1] = singularity[1][2]; 
+	defMat[0][2] = defMat[1][2] = 0; 
+	defMat[2][2] = 1; 
+	invertMatrix(defMat, invDefMat); 
+	randomRotate = rotateTriple(vn[rotChoice], vn[(rotChoice+1)%3], 
+	  vn[(rotChoice+2)%3], rotMat);
+	invertMatrix(rotMat, invRotMat); 
+	multMatrixVector(rotMat, vn[0], vnr[0]); 
+	multMatrixVector(rotMat, vn[1], vnr[1]); 
+	multMatrixVector(rotMat, vn[2], vnr[2]); 
+	multMatrixVector(rotMat, sn[0], snr[0]); 
+	multMatrixVector(rotMat, sn[1], snr[1]); 
+	multMatrixVector(rotMat, sn[2], snr[2]); 
+	multMatrixVector(rotMat, cn[0], cnr[0]); 
+	multMatrixVector(rotMat, cn[1], cnr[1]); 
+	multMatrixVector(rotMat, cn[2], cnr[2]); 
+	multMatrixVector(invDefMat, vnr[0], vnd[0]); 
+	multMatrixVector(invDefMat, vnr[1], vnd[1]); 
+	multMatrixVector(invDefMat, vnr[2], vnd[2]); 
+	crossProduct(vnd[(rotChoice+1)%3], vnd[(rotChoice+2)%3], dcn);
+	normalize(dcn, dcn);
 #ifdef DEBUG 
-    printf("Deformation matrix:\n");
-    showMatrix(defMat); 
-    printf("Its inverse:\n");
-    showMatrix(invDefMat); 
-    printf("Rotation matrix:\n");
-    showMatrix(rotMat);
-    printf("Its matrix:\n");
-    showMatrix(invRotMat);    
-    printf("Rotated (unit) view vectors:\n");
-    showVector(vnr[0]); 
-    showVector(vnr[1]); 
-    showVector(vnr[2]); 
-    printf("Rotated side direction vectors:\n");
-    showVector(snr[0]); 
-    showVector(snr[1]); 
-    showVector(snr[2]); 
-    printf("Rotated containment normal vectors:\n");
-    showVector(cnr[0]); 
-    showVector(cnr[1]); 
-    showVector(cnr[2]); 
-    printf("Deformed (unit) view vectors:\n");
-    showVector(vnd[0]); 
-    showVector(vnd[1]); 
-    showVector(vnd[2]); 
-    printf("Deformed special containment normal vector:\n");
-    showVector(dcn);
-#endif    
+	printf("Deformation matrix:\n");
+	showMatrix(defMat); 
+	printf("Its inverse:\n");
+	showMatrix(invDefMat); 
+	printf("Rotation matrix:\n");
+	showMatrix(rotMat);
+	printf("Its matrix:\n");
+	showMatrix(invRotMat);
+	printf("Rotated (unit) view vectors:\n");
+	showVector(vnr[0]); 
+	showVector(vnr[1]); 
+	showVector(vnr[2]); 
+	printf("Rotated side direction vectors:\n");
+	showVector(snr[0]); 
+	showVector(snr[1]); 
+	showVector(snr[2]); 
+	printf("Rotated containment normal vectors:\n");
+	showVector(cnr[0]); 
+	showVector(cnr[1]); 
+	showVector(cnr[2]); 
+	printf("Deformed (unit) view vectors:\n");
+	showVector(vnd[0]); 
+	showVector(vnd[1]); 
+	showVector(vnd[2]); 
+	printf("Deformed special containment normal vector:\n");
+	showVector(dcn);
+#endif
 
-    // Phase Four - Solve system consisting of a quartic 
-    // quinomial equation and a linear equation 
+	// Phase Four - Solve system consisting of a quartic 
+	// quinomial equation and a linear equation 
 
-    A = 2*sqrt(2)*alphaSqDiff*mu0*eta; 
-    B = 2*(eta-2*beta*mu0*mu0 - (1-2*alphaSqSum*mu0*mu0)*sqrt(eta)); 
-    C = 2*(eta-2*beta*mu0*mu0 + (1-2*alphaSqSum*mu0*mu0)*sqrt(eta));
-    D = -32*SQR(alphaSqDiff)*beta*SQR(mu0*nu0)*SQR(mu0);
-    E = (1-SQR(alpha1+alpha2))*(1-SQR(alpha1-alpha2))*mu0*mu0; 
+	A = 2*sqrt(2)*alphaSqDiff*mu0*eta; 
+	B = 2*(eta-2*beta*mu0*mu0 - (1-2*alphaSqSum*mu0*mu0)*sqrt(eta)); 
+	C = 2*(eta-2*beta*mu0*mu0 + (1-2*alphaSqSum*mu0*mu0)*sqrt(eta));
+	D = -32*SQR(alphaSqDiff)*beta*SQR(mu0*nu0)*SQR(mu0);
+	E = (1-SQR(alpha1+alpha2))*(1-SQR(alpha1-alpha2))*mu0*mu0; 
 	A /= (singLen0*singLen1); 
 	B /= SQR(singLen0); 
 	C /= SQR(singLen1);
@@ -1205,8 +1205,8 @@ double ellipticP3PSolver(double v[3][3]) {
 	printf("A B C D E after = %lf %lf %lf %lf %lf\n", A, B, C, D, E);
 	printf("F G H = %lf %lf %lf\n", F, G, H);
 #endif
-    numSolns = solveSystem(A, B, C, D, E, F, G, H, U, V); 
-    for(i=0; i<numSolns; i++) {
+	numSolns = solveSystem(A, B, C, D, E, F, G, H, U, V); 
+	for(i=0; i<numSolns; i++) {
 		tempVec[0] = defMat[0][0]*U[i]+defMat[0][1]*V[i]+defMat[0][2];
 		tempVec[1] = defMat[1][0]*U[i]+defMat[1][1]*V[i]+defMat[1][2];
 		tempVec[2] = defMat[2][0]*U[i]+defMat[2][1]*V[i]+defMat[2][2];
@@ -1217,18 +1217,18 @@ double ellipticP3PSolver(double v[3][3]) {
 #endif
 	}
 
-    // Phase Five - Process each potential solution, rotating 
-    // back to the original coordinates to discover a possible 
-    // plane through the origin that is parallel to the control- 
-    // points plane; Attempt to translate this plane to see if 
-    // it really could be moved to the control-points plane 
+	// Phase Five - Process each potential solution, rotating 
+	// back to the original coordinates to discover a possible 
+	// plane through the origin that is parallel to the control- 
+	// points plane; Attempt to translate this plane to see if 
+	// it really could be moved to the control-points plane 
 
 	errors[0] = errors[1] = errors[2] = errors[3] = 
 		minerror = NO_ACCEPTABLE_ESTIMATES;
 	if (numSolns == 0) minerror = NO_SYSTEM_SOLUTIONS;
 	else 
 	  for(i=0; i<numSolns; i++) {
-        if (fabs(Z[i]) > tol) {
+		if (fabs(Z[i]) > tol) {
 		  mu10[i] = mu1 = ( (SQR(nu0)-SQR(mu0)-1)*SQR(nu0*X[i])
 		   + (SQR(mu0)-SQR(nu0)-1)*SQR(mu0*Y[i])
 		   + 2*mu0*nu0*X[i]*Y[i]
@@ -1239,8 +1239,8 @@ double ellipticP3PSolver(double v[3][3]) {
 		   - 2*mu0*nu0*X[i]*Y[i]
 		   + 2*(1-SQR(alpha1)+SQR(alpha2))*SQR(mu0*nu0) )
 		   / (alpha2*SQR(2*mu0*nu0)*Z[i]); 
-    	  nu10[i] = nu1 = (nu0*X[i]-mu0*Y[i])/(2*alpha1*mu0*nu0); 
-    	  nu20[i] = nu2 = (nu0*X[i]+mu0*Y[i])/(2*alpha2*mu0*nu0); 
+		  nu10[i] = nu1 = (nu0*X[i]-mu0*Y[i])/(2*alpha1*mu0*nu0); 
+		  nu20[i] = nu2 = (nu0*X[i]+mu0*Y[i])/(2*alpha2*mu0*nu0); 
 		  a1[0] = mu0*nu1; a1[1] = -nu0*nu1; a1[2] = mu1; 
 		  a2[0] = mu0*nu2; a2[1] =  nu0*nu2; a2[2] = mu2; 
 		  crossProduct(a1, a2, nr);
@@ -1261,18 +1261,18 @@ double ellipticP3PSolver(double v[3][3]) {
 		  printf("dp's = %lf %lf %lf\n", dp[0], dp[1], dp[2]);
 #endif
 		  if (
-		    SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0] > tol && 
-		    SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1] > tol && 
-		    SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2] > tol ) {
+			SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0] > tol && 
+			SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1] > tol && 
+			SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2] > tol ) {
 			  lambda0 = sl[0]*dp[1]*dp[2] / 
-			    sqrt(SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0]); 
+				sqrt(SQR(dp[1])+SQR(dp[2])-2*dp[1]*dp[2]*vndp[0]); 
 			  lambda1 = sl[1]*dp[2]*dp[0] / 
-			    sqrt(SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1]); 
+				sqrt(SQR(dp[2])+SQR(dp[0])-2*dp[2]*dp[0]*vndp[1]); 
 			  lambda2 = sl[2]*dp[0]*dp[1] / 
-			    sqrt(SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2]); 
+				sqrt(SQR(dp[0])+SQR(dp[1])-2*dp[0]*dp[1]*vndp[2]); 
 			  lambda = (lambda0 + lambda1 + lambda2) / 3;
 			  for(j=0; j<3; j++)
-			    for(k=0; k<3; k++)
+				for(k=0; k<3; k++)
 				  guess[j][k] = tripleProdSign*lambda*vn[j][k]/dp[j]; 
 			  // coordinate differences 
 			  subMatrices(guess, v, diff);
@@ -1283,7 +1283,7 @@ double ellipticP3PSolver(double v[3][3]) {
 			  transposeMatrix(diff, tempMat1);
 			  multMatrices(diff, tempMat1, tempMat2);
 			  errors[i] = error = 
-			    sqrt(tempMat2[0][0]+tempMat2[1][1]+tempMat2[2][2]);
+				sqrt(tempMat2[0][0]+tempMat2[1][1]+tempMat2[2][2]);
 			  if (error < errorLimit && 
 			   (minerror < 0 || error < minerror)) 
 			  	 minerror = error; 
@@ -1298,41 +1298,41 @@ double ellipticP3PSolver(double v[3][3]) {
 #endif
 		  }
 	  } 
-    }
+	}
 #ifdef DEBUG
-    if (minerror < -1)
-      printf("Error: no solutions to algebraic system"); 
-    else if (minerror < 0)
-      printf("Error: no acceptable estimates"); 
+	if (minerror < -1)
+	  printf("Error: no solutions to algebraic system"); 
+	else if (minerror < 0)
+	  printf("Error: no acceptable estimates"); 
 #endif
 #ifdef DEBUG2
 	if (minerror < 0 || minerror > DEBUG2_CUTOFF) {
-    	printf("minimum error = %lf\n", minerror);
-    	printf("numSolns = %d\n", numSolns);
-    	printf("errors = %lg %lg %lg %lg\n", 
-    	  errors[0], errors[1], errors[2], errors[3]);
-    	printf("distance = %lf\n", 
-    	  (LEN(v[0])+LEN(v[1])+LEN(v[2]))/3); 
-    	printf("size = %lf\n", 
-    	  (LEN(s[0])+LEN(s[1])+LEN(s[2]))/3); 
+		printf("minimum error = %lf\n", minerror);
+		printf("numSolns = %d\n", numSolns);
+		printf("errors = %lg %lg %lg %lg\n", 
+		  errors[0], errors[1], errors[2], errors[3]);
+		printf("distance = %lf\n", 
+		  (LEN(v[0])+LEN(v[1])+LEN(v[2]))/3); 
+		printf("size = %lf\n", 
+		  (LEN(s[0])+LEN(s[1])+LEN(s[2]))/3); 
 		printf("rotation choice = %d\n", rotChoice);
 		printf("eligibles = %d %d %d\n", eligible[0], 
 		  eligible[1], eligible[2]);
 		printf("eta = %lf\n", eta);
-    	printf("dot prod of singularities = %lf\n", singDot); 
-    	printf("square of that = %lf\n", SQR(singDot)); 
-    	printf("eta' list: %lf %lf %lf\n", 
-    	  eta0prime[0], eta0prime[1], eta0prime[2]);
-    	printf("mu0's: %lf %lf %lf\n", mu00[0], mu00[1], mu00[2]);
-    	printf("nu0's: %lf %lf %lf\n", nu00[0], nu00[1], nu00[2]);
-    	printf("alpha1's: %lf %lf %lf\n", alpha10[0], alpha10[1], alpha10[2]);
-    	printf("alpha2's: %lf %lf %lf\n", alpha20[0], alpha20[1], alpha20[2]);
-    	printf("randomRotate = %d\n", randomRotate); 
-    	printf("Z's = %lf %lf %lf %lf\n", Z[0], Z[1], Z[2], Z[3]);
-    	printf("mu1's = %lf %lf %lf %lf\n", mu10[0],mu10[1],mu10[2],mu10[3]);
-    	printf("mu2's = %lf %lf %lf %lf\n", mu20[0],mu20[1],mu20[2],mu20[3]);
-    	printf("nu1's = %lf %lf %lf %lf\n", nu10[0],nu10[1],nu10[2],nu10[3]);
-    	printf("nu2's = %lf %lf %lf %lf\n\n", nu20[0],nu20[1],nu20[2],nu20[3]);
+		printf("dot prod of singularities = %lf\n", singDot); 
+		printf("square of that = %lf\n", SQR(singDot)); 
+		printf("eta' list: %lf %lf %lf\n", 
+		  eta0prime[0], eta0prime[1], eta0prime[2]);
+		printf("mu0's: %lf %lf %lf\n", mu00[0], mu00[1], mu00[2]);
+		printf("nu0's: %lf %lf %lf\n", nu00[0], nu00[1], nu00[2]);
+		printf("alpha1's: %lf %lf %lf\n", alpha10[0], alpha10[1], alpha10[2]);
+		printf("alpha2's: %lf %lf %lf\n", alpha20[0], alpha20[1], alpha20[2]);
+		printf("randomRotate = %d\n", randomRotate); 
+		printf("Z's = %lf %lf %lf %lf\n", Z[0], Z[1], Z[2], Z[3]);
+		printf("mu1's = %lf %lf %lf %lf\n", mu10[0],mu10[1],mu10[2],mu10[3]);
+		printf("mu2's = %lf %lf %lf %lf\n", mu20[0],mu20[1],mu20[2],mu20[3]);
+		printf("nu1's = %lf %lf %lf %lf\n", nu10[0],nu10[1],nu10[2],nu10[3]);
+		printf("nu2's = %lf %lf %lf %lf\n\n", nu20[0],nu20[1],nu20[2],nu20[3]);
 	}
 #endif
 	end_time = clock();
@@ -1522,9 +1522,9 @@ void multipleTests() {
 	  liftRanges[4][2] = { {10,20}, {100,200}, {1000, 2000} },
 	  triangles[12][3] = { 
 	  	{0, 80, 230},  {0, 70, 300},  {0, 33, 65},
-	    {0, 30, 200},  {0, 130, 250}, {0, 24, 55},  
-	    {0, 190, 210}, {0, 42, 244},  {0, 255, 315},  
-	    {0, 72, 232},  {0, 175, 184}, {0, 2, 7} };
+		{0, 30, 200},  {0, 130, 250}, {0, 24, 55},  
+		{0, 190, 210}, {0, 42, 244},  {0, 255, 315},  
+		{0, 72, 232},  {0, 175, 184}, {0, 2, 7} };
 
 	double timeTotal = 0, stddev, avgerror, minerror = -1, maxerror = -1, 
 	  errorPercentages[16];
