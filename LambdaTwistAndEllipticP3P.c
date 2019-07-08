@@ -969,8 +969,9 @@ double ellipticP3PSolver(double v[3][3]) {
 	  nu20[4], errors[4],
 
 	errorLimit = 1;
-	tol2 = tol = 1e-20;
-	tol3 = 0.00001; 
+	tol  = 1e-20;
+	tol2 = 1e-20;
+	tol3 = 0.0001;
 
 	// Phase One - Find some basic knowable geometric 
 	// quantities (also compute some unknowable ones to 
@@ -991,7 +992,6 @@ double ellipticP3PSolver(double v[3][3]) {
 		vndp[i] = DOT(vn[ROTF(i)],vn[ROTB(i)]);
 		sndp[i] = DOT(sn[ROTF(i)],sn[ROTB(i)]);
 		crossProduct(vn[ROTF(i)], vn[ROTB(i)], cn[i]);
-//		crossProduct(v[ROTF(i)], v[ROTB(i)], cn[i]);
 		normalize(cn[i], cn[i]);
 	}
 	for(i=0; i<3; i++) {
@@ -1062,16 +1062,16 @@ double ellipticP3PSolver(double v[3][3]) {
 	  return NO_ELIGIBLE_ROTATION; 
 	}
 	rotChoice = tempInt;
-	temp  = fabs(eta0prime[rotChoice]);
-	temp1 = fabs(eta0prime[(rotChoice+1)%3]);
-	temp2 = fabs(eta0prime[(rotChoice+2)%3]);
+	temp  = fabs(eta0prime[tempInt]);
+	temp1 = fabs(eta0prime[(tempInt+1)%3]);
+	temp2 = fabs(eta0prime[(tempInt+2)%3]);
 	if ( eligible[(tempInt+1)%3] && ( (
 	  temp < tol3 && temp1 > temp
 	 ) || (
 	  temp >= tol3 && temp1 >= tol3 && temp1 < temp
 	 ) ) ) {
 		rotChoice = (tempInt+1)%3;
-		temp  = fabs(eta0prime[rotChoice]);
+		temp  = temp1;
 	}
 	if ( eligible[(tempInt+2)%3] && ( (
 	  temp < tol3 && temp2 > temp
