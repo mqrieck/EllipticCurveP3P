@@ -27,7 +27,7 @@
 // A couple levels of debugging capability:
 //#define DEBUG
 //#define DEBUG2
-#define DEBUG2_CUTOFF 1
+//#define DEBUG2_CUTOFF 1
 
 // Set attack angle range to restrict the rotation that precedes 
 // the lifting step (for single test)
@@ -950,13 +950,13 @@ int solveSystem(double A, double B, double C, double D, double E,
 // Solve the P3P problem using the elliptic-curve method
 double ellipticP3PSolver(double v[3][3]) {
 	int i, j, k, rotChoice, tripleProdSign, tempInt, 
-	  randomRotate, numSolns; 
+	  randomRotate, numSolns, eligible[3]; 
 	double a, b, c, d, A, B, C, D, E, F, G, H, rootOfCubic, 
-	  tripleProd, mu0, nu0, alpha1, alpha2, alpha1sq, 
-	  alpha2sq, alphaSqDiff, alphaSqSum, eta, beta, singDot, 
-	  singLen0, singLen1, mu1, mu2, nu1, nu2, temp, tol, tol2,
+	  tripleProd, mu0, nu0, alpha1, alpha2, alpha1sq, alpha2sq, 
+	  alphaSqDiff, alphaSqSum, eta, beta, singDot, singLen0, 
+	  singLen1, mu1, mu2, nu1, nu2, temp, tol, tol2, tol3, 
 	  lambda0, lambda1, lambda2, lambda, error, minerror, 
-	  pi = 4*atan(1), 
+	  temp1, temp2, temp3, pi = 4*atan(1), 
 	  vn[3][3], vl[3], sl[3], s[3][3], sn[3][3], cn[3][3], 
 	  list[3], singularity[2][3], vnr[3][3], snr[3][3], 
 	  cnr[3][3], vnd[3][3], dcn[3], a1[3], a2[3], nr[3], n[3], 
@@ -964,13 +964,13 @@ double ellipticP3PSolver(double v[3][3]) {
 	  U[4], V[4], X[4], Y[4], Z[4], dp[3], rotMat[3][3], 
 	  invRotMat[3][3], defMat[3][3], invDefMat[3][3],
 	  diff[3][3], vndp[3], sndp[3], cndp[3], mu00[3], nu00[3], 
-	  alpha10[3], alpha20[3], eta0[3], eligible[3], eta0prime[3],
+	  alpha10[3], alpha20[3], eta0[3], eta0prime[3],
 	  direction[3], triangleNormal[3], mu10[4], mu20[4], nu10[4], 
 	  nu20[4], errors[4], 
 
 	errorLimit = 1;
 	tol2 = tol = 1e-20;
-	//tol2 = 0.00000001; 
+	tol3 = 0.00001; 
 
 	// Phase One - Find some basic knowable geometric 
 	// quantities (also compute some unknowable ones to 
@@ -1049,7 +1049,7 @@ double ellipticP3PSolver(double v[3][3]) {
 				eligible[i] = FALSE; 
 			else {
 				eligible[i] = TRUE; 
-				tempInt = i; 			
+				if (tempInt < 0) tempInt = i; 			
 			}
 		} else { 
 			eligible[i] = FALSE; 
@@ -1060,22 +1060,26 @@ double ellipticP3PSolver(double v[3][3]) {
       printf("Error: no eligible rotations"); 
 #endif
 	  return NO_ELIGIBLE_ROTATION; 
-	}	
+	}
 	rotChoice = tempInt;
-/*
-	if (eligible[(tempInt+1)%3] && 
-	 eta0[(tempInt+1)%3] > eta0[rotChoice])
-	  rotChoice = (tempInt+1)%3; 
-	if (eligible[(tempInt+2)%3] &&
-	 eta0[(tempInt+2)%3] > eta0[rotChoice])
-	  rotChoice = (tempInt+2)%3;
-*/
-	if (eligible[(tempInt+1)%3] && 
-	 fabs(eta0prime[(tempInt+1)%3]) < fabs(eta0prime[rotChoice]))
-	  rotChoice = (tempInt+1)%3; 
-	if (eligible[(tempInt+2)%3] &&
-	 fabs(eta0prime[(tempInt+2)%3]) < fabs(eta0prime[rotChoice]))
-	  rotChoice = (tempInt+2)%3;
+	temp  = fabs(eta0prime[rotChoice]);
+	temp1 = fabs(eta0prime[(rotChoice+1)%3]);
+	temp2 = fabs(eta0prime[(rotChoice+2)%3]);
+	if ( eligible[(tempInt+1)%3] && ( (
+	  temp < tol3 && temp1 > temp
+	 ) || (
+	  temp >= tol3 && temp1 >= tol3 && temp1 < temp
+	 ) ) ) {
+		rotChoice = (tempInt+1)%3;
+		temp  = fabs(eta0prime[rotChoice]);
+	}
+	if ( eligible[(tempInt+2)%3] && ( (
+	  temp < tol3 && temp2 > temp
+	 ) || (
+	  temp >= tol3 && temp2 >= tol3 && temp2 < temp
+	 ) ) ) {
+		rotChoice = (tempInt+2)%3;
+	}
 	mu0 = mu00[rotChoice]; 
 	nu0 = nu00[rotChoice]; 
 	alpha1 = alpha10[rotChoice]; 
@@ -1312,6 +1316,8 @@ double ellipticP3PSolver(double v[3][3]) {
     	printf("size = %lf\n", 
     	  (LEN(s[0])+LEN(s[1])+LEN(s[2]))/3); 
 		printf("rotation choice = %d\n", rotChoice);
+		printf("eligibles = %d %d %d\n", eligible[0], 
+		  eligible[1], eligible[2]);
 		printf("eta = %lf\n", eta);
     	printf("dot prod of singularities = %lf\n", singDot); 
     	printf("square of that = %lf\n", SQR(singDot)); 
