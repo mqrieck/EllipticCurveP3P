@@ -31,8 +31,8 @@
 
 // Set attack angle range to restrict the rotation that precedes 
 // the lifting step (for single test)
-#define ATTACK_ANGLE_MIN 60
-#define ATTACK_ANGLE_MAX 90
+#define ATTACK_ANGLE_MIN 00
+#define ATTACK_ANGLE_MAX 30
 
 // Starting test triangle angles (for single test)
 #define FIRST_ANGLE 0
@@ -966,7 +966,7 @@ double ellipticP3PSolver(double v[3][3]) {
 	  diff[3][3], vndp[3], sndp[3], cndp[3], mu00[3], nu00[3], 
 	  alpha10[3], alpha20[3], eta0[3], eta0prime[3],
 	  direction[3], triangleNormal[3], mu10[4], mu20[4], nu10[4], 
-	  nu20[4], errors[4], 
+	  nu20[4], errors[4],
 
 	errorLimit = 1;
 	tol2 = tol = 1e-20;
