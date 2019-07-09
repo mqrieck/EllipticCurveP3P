@@ -1536,8 +1536,8 @@ void multipleTests() {
 	char s1[] = "Method, Min_Attack, Max_Attack, Min_Lift, Max_Lift, "; 
 	char s2[] = "Angle_1, Angle_2, Angle_3, Time, Hits, Misses, Fail_0, Fail_1, Fail_2, ";
 	char s3[] = "Fail_3, Fail_4, Avg_Error, Std_Dev, Min_Error, Max_Error, "; 
-	char s4[] = "Rng_0%%, Rng_1%%, Rng_2%%, Rng_3%%, Rng_4%%, Rng_5%%, Rng_6%%, Rng_7%%, Rng_8%%, "; 
-	char s5[] = "Rng_9%%, Rng_10%%, Rng_11%%, Rng_12%%, Rng_13%%, Rng_14%%, Rng_15%%\n\n"; 
+	char s4[] = "Rng_0%, Rng_1%, Rng_2%, Rng_3%, Rng_4%, Rng_5%, Rng_6%, Rng_7%, Rng_8%, "; 
+	char s5[] = "Rng_9%, Rng_10%, Rng_11%, Rng_12%, Rng_13%, Rng_14%, Rng_15%\n\n"; 
 	char s6[] = "LT, %d, %d, %d, %d, %d, %d, %d, %lf, %d, %d, %d, %d, %d, %d, "; 
 	char s7[] = "%d, %lg, %lg, %lg, %lg, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, "; 
 	char s8[] = " %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf\n";
