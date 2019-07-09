@@ -19,10 +19,10 @@
 #include <string.h>
 
 // How many trials should main() execute? 
-#define NUMBER_TRIALS 1000000
+#define NUMBER_TRIALS 100000
 
 // Do multiple tests, instead of single test 
-//#define MULTIPLE_TESTS
+#define MULTIPLE_TESTS
 
 // A couple levels of debugging capability:
 //#define DEBUG
@@ -1516,15 +1516,19 @@ void multipleTests() {
 	  hits = 0, misses = 0, methodChoice = 0, numErrorRanges = 16, 
 	  failures[5], errorCounts[16],
 
-	  numAttackRanges = 3, numLiftRanges = 3, numTriangles = 6,
+	  numAttackRanges = 3, numLiftRanges = 3, numTriangles = 24,
 
 	  attackRanges[3][2] = { {0,30}, {30,60}, {60,90} }, 
 	  liftRanges[4][2] = { {10,20}, {100,200}, {1000, 2000} },
-	  triangles[12][3] = { 
+	  triangles[24][3] = { 
 	  	{0, 80, 230},  {0, 70, 300},  {0, 33, 65},
 		{0, 30, 200},  {0, 130, 250}, {0, 24, 55},  
 		{0, 190, 210}, {0, 42, 244},  {0, 255, 315},  
-		{0, 72, 232},  {0, 175, 184}, {0, 2, 7} };
+		{0, 72, 232},  {0, 175, 184}, {0, 2, 7}, 
+		{0, 14, 191},  {0, 29, 305},  {0, 45, 65},	
+		{0, 77, 270},  {0, 93, 189},  {0, 102, 333},  
+		{0, 68, 201},  {0, 173, 188}, {0, 145, 201},  
+		{0, 154, 323}, {0, 199, 355}, {0, 1, 2}	};
 
 	double timeTotal = 0, stddev, avgerror, minerror = -1, maxerror = -1, 
 	  errorPercentages[16];
@@ -1599,7 +1603,8 @@ void multipleTests() {
 				  errorPercentages[0], errorPercentages[1], errorPercentages[2], errorPercentages[3], 
 				  errorPercentages[4], errorPercentages[5], errorPercentages[6], errorPercentages[7], 
 				  errorPercentages[8], errorPercentages[9], errorPercentages[10], errorPercentages[11], 
-				  errorPercentages[12], errorPercentages[13], errorPercentages[14], errorPercentages[15]); 
+				  errorPercentages[12], errorPercentages[13], errorPercentages[14], errorPercentages[15]);
+				printf("\n");   
 			}
 			printf("\n");
 		}
