@@ -19,7 +19,7 @@
 #include <string.h>
 
 // How many trials should main() execute? 
-#define NUMBER_TRIALS 100000
+#define NUMBER_TRIALS 1000000
 
 // Do multiple tests, instead of single test 
 #define MULTIPLE_TESTS
