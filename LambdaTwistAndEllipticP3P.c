@@ -22,7 +22,7 @@
 #define NUMBER_TRIALS 1000000
 
 // Do multiple tests, instead of single test 
-#define MULTIPLE_TESTS
+//#define MULTIPLE_TESTS
 
 // A couple levels of debugging capability:
 //#define DEBUG
