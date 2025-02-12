@@ -1,5 +1,4 @@
 
-
 			// LambdaTwistAndEllipticP3P.c 
 
 			// Author: M. Q. Rieck 
@@ -12,6 +11,38 @@
 // an accurate fast robust perspective three point (P3P) solver"
 // and their C++ source code, translated to C. 
 
+// The Lambda Twist code used here is copyrighted as follows. 
+
+// Copyright (c) 2020, Viktor Larsson
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//
+//     * Neither the name of the copyright holder nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -21,7 +52,7 @@
 // How many trials should main() execute? 
 #define NUMBER_TRIALS 1000000
 
-// Do multiple tests, instead of single test 
+// Do multiple tests, instead of single test? 
 //#define MULTIPLE_TESTS
 
 // A couple levels of debugging capability:
@@ -31,11 +62,11 @@
 
 // Set attack angle range to restrict the rotation that precedes 
 // the lifting step (for single test)
-#define ATTACK_ANGLE_MIN 00
-#define ATTACK_ANGLE_MAX 30
+#define ATTACK_ANGLE_MIN 0
+#define ATTACK_ANGLE_MAX 60
 
 // Random elevation of triangle limits (for single test)
-#define MIN_LIFT 10
+#define MIN_LIFT 1
 #define MAX_LIFT 20
 
 // Maximum rotation angle after lifting (for single test)
