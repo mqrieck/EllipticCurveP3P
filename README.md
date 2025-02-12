@@ -14,6 +14,7 @@ and their C++ source code, translated to C.
 
 The Lambda Twist code used here is copyrighted as follows. 
 
+BSD 3-Clause License
 Copyright (c) 2020, Viktor Larsson
 All rights reserved.
 
